@@ -64,12 +64,33 @@
         </div>
         
         <div v-else class="movies-container">
-          <div class="movies-grid">
-            <MovieCard 
-              v-for="movie in filteredMovies" 
-              :key="movie.id" 
-              :movie="movie" 
-            />
+          <div class="table-view">
+            <table>
+              <thead>
+                <tr>
+                  <th>Poster</th>
+                  <th>Title</th>
+                  <th>Release Date</th>
+                  <th>Rating</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="movie in filteredMovies" :key="movie.id">
+                  <td>
+                    <img :src="getImageUrl(movie.poster_path, 'w92')" alt="poster" class="table-poster" />
+                  </td>
+                  <td>{{ movie.title }}</td>
+                  <td>{{ movie.release_date }}</td>
+                  <td>★ {{ movie.vote_average }}</td>
+                  <td>
+                    <button @click="toggleWishlist(movie)" class="wishlist-btn">
+                      <i class="fas" :class="wishlistStore.isInWishlist(movie.id) ? 'fa-check' : 'fa-plus'"></i>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
           
           <!-- Pagination Controls -->
@@ -99,11 +120,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
 import AppHeader from '../components/AppHeader.vue';
-import MovieCard from '../components/MovieCard.vue';
 import LoadingSpinner from '../components/LoadingSpinner.vue';
-import { searchMovies, fetchPopularMovies, discoverMovies } from '../services/tmdb';
-import type { Movie } from '../stores/wishlist';
+import { searchMovies, fetchPopularMovies, discoverMovies, getImageUrl } from '../services/tmdb';
+import { useWishlistStore, type Movie } from '../stores/wishlist';
 
+const wishlistStore = useWishlistStore();
 const searchQuery = ref('');
 const movies = ref<Movie[]>([]);
 const loading = ref(false);
@@ -183,6 +204,10 @@ const fetchMovies = async (pageNum: number) => {
   } finally {
     loading.value = false;
   }
+};
+
+const toggleWishlist = (movie: Movie) => {
+  wishlistStore.toggleWishlist(movie);
 };
 
 const handleSearch = async (query?: string) => {
@@ -456,5 +481,43 @@ const resetFilters = () => {
 .page-info {
   color: #aaa;
   font-size: 1rem;
+}
+
+.table-view {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  overflow-x: auto;
+}
+
+.table-view table {
+  width: 100%;
+  border-collapse: collapse;
+  color: white;
+  margin-bottom: 20px;
+}
+
+.table-view th, .table-view td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #333;
+  vertical-align: middle;
+}
+
+.table-poster {
+  width: 50px;
+  border-radius: 4px;
+}
+
+.wishlist-btn {
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+.wishlist-btn:hover {
+  color: var(--primary-color);
 }
 </style>
