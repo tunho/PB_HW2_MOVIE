@@ -23,7 +23,7 @@ const currentFontIndex = ref(0);
 
 const cycleFontSize = () => {
   currentFontIndex.value = (currentFontIndex.value + 1) % fontSizes.length;
-  const newSize = fontSizes[currentFontIndex.value];
+  const newSize = fontSizes[currentFontIndex.value] || '16px';
   document.documentElement.style.fontSize = newSize;
   localStorage.setItem('user_font_size', newSize);
 };
