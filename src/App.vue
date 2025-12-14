@@ -4,11 +4,12 @@ import MovieDetailModal from './components/MovieDetailModal.vue'
 </script>
 
 <template>
-  <RouterView v-slot="{ Component }">
-    <Transition name="page" mode="out-in">
+  <router-view v-slot="{ Component }">
+    <!-- Global Page Transition -->
+    <transition name="fade" mode="out-in">
       <component :is="Component" />
-    </Transition>
-  </RouterView>
+    </transition>
+  </router-view>
   <MovieDetailModal />
 </template>
 

@@ -1,3 +1,7 @@
+/**
+ * Main entry point for the Netflix-like Demo App
+ * Sets up Vue, Pinia, Router, and FontAwesome
+ */
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import '@fortawesome/fontawesome-free/css/all.css'
