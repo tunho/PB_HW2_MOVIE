@@ -121,7 +121,7 @@
 import { ref, computed, onMounted, watch } from 'vue';
 import AppHeader from '../components/AppHeader.vue';
 import LoadingSpinner from '../components/LoadingSpinner.vue';
-import { searchMovies, fetchPopularMovies, discoverMovies, getImageUrl } from '../services/tmdb';
+import { searchMovies, discoverMovies, getImageUrl } from '../services/tmdb';
 import { useWishlistStore, type Movie } from '../stores/wishlist';
 
 const wishlistStore = useWishlistStore();
@@ -168,7 +168,7 @@ const fetchMovies = async (pageNum: number) => {
   
   try {
     let data;
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split('T')[0] as string;
     
     if (searchQuery.value.trim()) {
       // Search Mode

@@ -73,7 +73,7 @@ import AppHeader from '../components/AppHeader.vue';
 import MovieCard from '../components/MovieCard.vue';
 import LoadingSpinner from '../components/LoadingSpinner.vue';
 import PaginationControl from '../components/PaginationControl.vue';
-import { fetchPopularMovies, getImageUrl, discoverMovies } from '../services/tmdb';
+import { getImageUrl, discoverMovies } from '../services/tmdb';
 import { useWishlistStore, type Movie } from '../stores/wishlist';
 
 import { useIntersectionObserver } from '../composables/useIntersectionObserver';
