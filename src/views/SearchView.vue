@@ -58,18 +58,38 @@
 
       <div class="results">
         <LoadingSpinner v-if="loading" />
+        
         <div v-else-if="filteredMovies.length === 0 && hasSearched && searchQuery" class="no-results">
           No movies found matching your criteria.
         </div>
-        <div class="movies-grid">
-          <MovieCard 
-            v-for="movie in filteredMovies" 
-            :key="movie.id" 
-            :movie="movie" 
-          />
-        </div>
-        <div ref="sentinel" class="sentinel">
-          <LoadingSpinner v-if="loading" />
+        
+        <div v-else class="movies-container">
+          <div class="movies-grid">
+            <MovieCard 
+              v-for="movie in filteredMovies" 
+              :key="movie.id" 
+              :movie="movie" 
+            />
+          </div>
+          
+          <!-- Pagination Controls -->
+          <div class="pagination-controls" v-if="filteredMovies.length > 0">
+            <button 
+              @click="changePage(page - 1)" 
+              :disabled="page === 1"
+              class="page-btn"
+            >
+              Previous
+            </button>
+            <span class="page-info">Page {{ page }} of {{ totalPages }}</span>
+            <button 
+              @click="changePage(page + 1)" 
+              :disabled="page >= totalPages"
+              class="page-btn"
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -92,7 +112,11 @@ const searchHistory = ref<string[]>([]);
 
 const selectedGenre = ref('');
 const minRating = ref('0');
-const sortBy = ref('popularity.desc'); // Default sort for API
+const sortBy = ref('popularity.desc');
+
+// Pagination State
+const page = ref(1);
+const totalPages = ref(1);
 
 // Load history on mount
 const loadHistory = () => {
@@ -102,66 +126,85 @@ const loadHistory = () => {
   }
 };
 
+const saveHistory = (query: string) => {
+  let history = [...searchHistory.value];
+  history = history.filter(item => item !== query);
+  history.unshift(query);
+  if (history.length > 5) history.pop();
+  
+  searchHistory.value = history;
+  localStorage.setItem('search_history', JSON.stringify(history));
+};
+
+const clearHistory = () => {
+  searchHistory.value = [];
+  localStorage.removeItem('search_history');
+};
+
+const fetchMovies = async (pageNum: number) => {
+  loading.value = true;
+  movies.value = []; // Clear current view
+  
+  try {
+    let data;
+    
+    if (searchQuery.value.trim()) {
+      // Search Mode
+      data = await searchMovies(searchQuery.value, pageNum);
+    } else {
+      // Browse Mode
+      let apiSort = 'popularity.desc';
+      if (sortBy.value === 'vote_average') apiSort = 'vote_average.desc';
+      if (sortBy.value === 'release_date') apiSort = 'primary_release_date.desc';
+      if (sortBy.value === 'popularity') apiSort = 'popularity.desc';
+
+      const params: any = {
+        sort_by: apiSort,
+        page: pageNum
+      };
+
+      if (selectedGenre.value) {
+        params.with_genres = selectedGenre.value;
+      }
+
+      if (minRating.value !== '0') {
+        params['vote_average.gte'] = minRating.value;
+      }
+      
+      data = await discoverMovies(params);
+    }
+
+    movies.value = data.results;
+    totalPages.value = Math.min(data.total_pages, 500); // TMDB limit
+    page.value = pageNum;
+    
+  } catch (e) {
+    console.error(e);
+  } finally {
+    loading.value = false;
+  }
+};
+
 const handleSearch = async (query?: string) => {
   const term = query || searchQuery.value;
   if (!term.trim()) return;
   
-  // Update input if searched via history click
   if (query) searchQuery.value = query;
-
   saveHistory(term);
   
-  loading.value = true;
   hasSearched.value = true;
-  movies.value = []; // Clear previous results
-  page.value = 1; // Reset page
-  
-  try {
-    const data = await searchMovies(term);
-    movies.value = data.results;
-    totalPages.value = data.total_pages;
-  } catch (e) {
-    console.error(e);
-  } finally {
-    loading.value = false;
-  }
-  
-  await ensureEnoughMovies();
+  await fetchMovies(1);
 };
 
 const loadDefaultMovies = async () => {
-  loading.value = true;
-  page.value = 1; // Reset page
-  try {
-    // Map sort values to API format
-    let apiSort = 'popularity.desc';
-    if (sortBy.value === 'vote_average') apiSort = 'vote_average.desc';
-    if (sortBy.value === 'release_date') apiSort = 'primary_release_date.desc';
-    if (sortBy.value === 'popularity') apiSort = 'popularity.desc';
+  await fetchMovies(1);
+};
 
-    const params: any = {
-      sort_by: apiSort,
-      page: 1
-    };
-
-    if (selectedGenre.value) {
-      params.with_genres = selectedGenre.value;
-    }
-
-    if (minRating.value !== '0') {
-      params['vote_average.gte'] = minRating.value;
-    }
-
-    const data = await discoverMovies(params);
-    movies.value = data.results;
-    totalPages.value = data.total_pages;
-  } catch (e) {
-    console.error(e);
-  } finally {
-    loading.value = false;
+const changePage = (newPage: number) => {
+  if (newPage >= 1 && newPage <= totalPages.value) {
+    fetchMovies(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
-  
-  await ensureEnoughMovies();
 };
 
 // Debounce function
@@ -178,139 +221,61 @@ watch(searchQuery, debounce((newQuery: string) => {
   if (newQuery.trim()) {
     handleSearch(newQuery);
   } else {
-    // Reset to initial state if query is empty
     hasSearched.value = false;
-    loadDefaultMovies(); // Reload default/filtered view
+    loadDefaultMovies();
   }
 }, 500));
 
-// Watch filters to trigger server-side filtering when no search query
+// Watch filters
 watch([selectedGenre, minRating, sortBy], () => {
-  if (!searchQuery.value.trim()) {
-    loadDefaultMovies();
-  }
+  // Reset to page 1 on filter change
+  fetchMovies(1);
 });
 
-// Infinite Scroll Logic
-const sentinel = ref<HTMLElement | null>(null);
-const page = ref(1);
-const totalPages = ref(1);
-
-const loadMore = async () => {
-  if (loading.value || page.value >= totalPages.value) return;
-  
-  loading.value = true;
-  const nextPage = page.value + 1;
-  
-  try {
-    let data;
-    if (searchQuery.value.trim()) {
-      // Search Mode
-      data = await searchMovies(searchQuery.value, nextPage);
-    } else {
-      // Browse Mode
-      // Map sort values to API format
-      let apiSort = 'popularity.desc';
-      if (sortBy.value === 'vote_average') apiSort = 'vote_average.desc';
-      if (sortBy.value === 'release_date') apiSort = 'primary_release_date.desc';
-      if (sortBy.value === 'popularity') apiSort = 'popularity.desc';
-
-      const params: any = {
-        sort_by: apiSort,
-        page: nextPage
-      };
-
-      if (selectedGenre.value) {
-        params.with_genres = selectedGenre.value;
-      }
-
-      if (minRating.value !== '0') {
-        params['vote_average.gte'] = minRating.value;
-      }
-      
-      data = await discoverMovies(params);
-    }
-
-    // Always increment page on success to avoid getting stuck on empty filtered pages
-    page.value = nextPage;
-
-    if (data.results.length > 0) {
-      movies.value = [...movies.value, ...data.results];
-    } 
-    
-    // If we got no results (filtered out), try loading the next page immediately
-    // to fill the screen, unless we reached the end
-    if (data.results.length === 0 && page.value < totalPages.value) {
-      loading.value = false; // Reset loading to allow recursive call
-      await loadMore();
-      return; // Exit current call
-    }
-  } catch (e) {
-    console.error(e);
-  } finally {
-    loading.value = false;
-  }
-};
-
-const ensureEnoughMovies = async () => {
-  // Try to load more until we have at least 20 items or run out of pages
-  // We limit the number of extra pages to avoid infinite loops if filter is too strict
-  let attempts = 0;
-  while (movies.value.length < 20 && page.value < totalPages.value && attempts < 5) {
-    await loadMore();
-    attempts++;
-  }
-};
-
-import { useIntersectionObserver } from '../composables/useIntersectionObserver';
-
-const { setupObserver } = useIntersectionObserver(sentinel, loadMore);
-
-onMounted(async () => {
+onMounted(() => {
   loadHistory();
-  await loadDefaultMovies();
-  // setupObserver is called in composable's onMounted, but we might need to ensure sentinel is rendered
+  loadDefaultMovies();
 });
 
 const filteredMovies = computed(() => {
-  // If we are in "Browse Mode" (no search query), movies.value is already filtered by the API.
-  // So we just return it.
+  // Client-side filtering for current page results (if needed)
+  // Since we are doing server-side filtering for Browse Mode, this is mostly for Search Mode
+  // where we might want to refine the 20 results returned.
+  // However, for consistency with Pagination, it's better to rely on Server-side as much as possible.
+  // But since searchMovies API doesn't support complex filtering (only query), 
+  // we might still need client-side filtering for Search Mode.
+  
   if (!searchQuery.value.trim()) {
-    return movies.value;
+    return movies.value; // Browse mode is already filtered by API
   }
 
-  // If we are in "Search Mode", we do client-side filtering on the search results.
-  // Note: For infinite scroll to work properly with client-side filtering, 
-  // we should ideally filter on the server. 
-  // But for now, we'll keep the hybrid approach: Server fetches pages, Client filters them.
-  // This might result in fewer items than expected if many are filtered out.
-  // However, the user asked for "related movies" when filtering without search, which we solved with server-side discover.
-  // When searching, we are still using client-side filtering for the specific results.
-  
+  // Search Mode: Client-side filter on the current page of results
   let result = [...movies.value];
 
-  // Filter by Genre (TMDB returns genre_ids)
   if (selectedGenre.value) {
     const genreId = parseInt(selectedGenre.value);
     result = result.filter((m: any) => m.genre_ids && m.genre_ids.includes(genreId));
   }
 
-  // Filter by Rating
   if (minRating.value !== '0') {
     result = result.filter(m => (m.vote_average || 0) >= parseInt(minRating.value));
   }
 
-  // Sort
-  result.sort((a, b) => {
-    if (sortBy.value === 'popularity') {
-      return ((b as any).popularity || 0) - ((a as any).popularity || 0);
-    } else if (sortBy.value === 'vote_average') {
-      return (b.vote_average || 0) - (a.vote_average || 0);
-    } else if (sortBy.value === 'release_date') {
-      return new Date(b.release_date || '').getTime() - new Date(a.release_date || '').getTime();
-    }
-    return 0;
-  });
+  // Sort is handled by API in Browse, but for Search we might need client sort
+  // if API doesn't support sort param in search endpoint (it usually doesn't).
+  // TMDB Search API sorts by relevance by default.
+  if (sortBy.value !== 'popularity.desc') { // If user changed sort
+     result.sort((a, b) => {
+      if (sortBy.value === 'popularity') {
+        return ((b as any).popularity || 0) - ((a as any).popularity || 0);
+      } else if (sortBy.value === 'vote_average') {
+        return (b.vote_average || 0) - (a.vote_average || 0);
+      } else if (sortBy.value === 'release_date') {
+        return new Date(b.release_date || '').getTime() - new Date(a.release_date || '').getTime();
+      }
+      return 0;
+    });
+  }
 
   return result;
 });
@@ -318,8 +283,8 @@ const filteredMovies = computed(() => {
 const resetFilters = () => {
   selectedGenre.value = '';
   minRating.value = '0';
-  sortBy.value = 'popularity';
-  // Watcher will trigger loadDefaultMovies if no search query
+  sortBy.value = 'popularity.desc';
+  // Watcher will trigger fetchMovies(1)
 };
 </script>
 
@@ -382,7 +347,7 @@ const resetFilters = () => {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-left: 10px; /* Separate from filters */
+  margin-left: 10px;
   padding-left: 10px;
   border-left: 1px solid #555;
 }
@@ -403,6 +368,7 @@ const resetFilters = () => {
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 20px;
   justify-items: center;
+  margin-bottom: 40px;
 }
 
 .no-results {
@@ -457,10 +423,38 @@ const resetFilters = () => {
   background: transparent;
 }
 
-.sentinel {
-  height: 50px;
-  margin-top: 20px;
+/* Pagination Styles */
+.pagination-controls {
   display: flex;
   justify-content: center;
+  align-items: center;
+  gap: 20px;
+  margin-top: 30px;
+  padding-bottom: 50px;
+}
+
+.page-btn {
+  background-color: #333;
+  color: white;
+  border: 1px solid #555;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-btn:hover:not(:disabled) {
+  background-color: #555;
+  border-color: var(--primary-color);
+}
+
+.page-info {
+  color: #aaa;
+  font-size: 1rem;
 }
 </style>
