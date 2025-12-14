@@ -238,7 +238,7 @@ const handleSubmit = async () => {
 
 .form-content {
   background: rgba(0, 0, 0, 0.75);
-  padding: 60px 68px 40px;
+  padding: 60px 40px 40px;
   border-radius: 4px;
   width: 100%;
   max-width: 450px;
@@ -305,17 +305,24 @@ button:active {
   margin-right: 5px;
 }
 
+.remember-me label {
+  white-space: nowrap;
+}
+
 .text-gray {
   color: #737373;
   margin-right: 8px;
+  white-space: nowrap;
 }
 
 .switch-mode {
   display: flex;
   align-items: center;
+  font-size: 0.9rem;
 }
 
 .switch-mode a {
+  white-space: nowrap;
   color: white;
 }
 
