@@ -27,7 +27,7 @@
         <button @click="clearHistory" class="clear-history">Clear History</button>
       </div>
 
-      <div class="filters" v-if="movies.length > 0 || hasSearched">
+      <div class="filters">
         <select v-model="selectedGenre">
           <option value="">All Genres</option>
           <option value="28">Action</option>
@@ -55,7 +55,7 @@
 
       <div class="results">
         <LoadingSpinner v-if="loading" />
-        <div v-else-if="filteredMovies.length === 0 && hasSearched" class="no-results">
+        <div v-else-if="filteredMovies.length === 0 && hasSearched && searchQuery" class="no-results">
           No movies found matching your criteria.
         </div>
         <div v-else class="movies-grid">
@@ -75,7 +75,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 import AppHeader from '../components/AppHeader.vue';
 import MovieCard from '../components/MovieCard.vue';
 import LoadingSpinner from '../components/LoadingSpinner.vue';
-import { searchMovies } from '../services/tmdb';
+import { searchMovies, fetchPopularMovies } from '../services/tmdb';
 import type { Movie } from '../stores/wishlist';
 
 const searchQuery = ref('');
@@ -93,6 +93,18 @@ const loadHistory = () => {
   const history = localStorage.getItem('search_history');
   if (history) {
     searchHistory.value = JSON.parse(history);
+  }
+};
+
+const loadDefaultMovies = async () => {
+  loading.value = true;
+  try {
+    const data = await fetchPopularMovies();
+    movies.value = data.results;
+  } catch (e) {
+    console.error(e);
+  } finally {
+    loading.value = false;
   }
 };
 
@@ -160,6 +172,7 @@ watch(searchQuery, debounce((newQuery: string) => {
 
 onMounted(() => {
   loadHistory();
+  loadDefaultMovies();
 });
 
 const filteredMovies = computed(() => {
