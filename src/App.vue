@@ -2,7 +2,7 @@
 <template>
   <router-view v-slot="{ Component }">
     <!-- Global Page Transition -->
-    <transition name="fade" mode="out-in">
+    <transition name="zoom-fade" mode="out-in">
       <component :is="Component" />
     </transition>
   </router-view>
@@ -42,14 +42,19 @@ onMounted(() => {
 </script>
 
 <style>
-.page-enter-active,
-.page-leave-active {
-  transition: opacity 0.3s ease;
+.zoom-fade-enter-active,
+.zoom-fade-leave-active {
+  transition: all 0.5s ease;
 }
 
-.page-enter-from,
-.page-leave-to {
+.zoom-fade-enter-from {
   opacity: 0;
+  transform: scale(0.95);
+}
+
+.zoom-fade-leave-to {
+  opacity: 0;
+  transform: scale(1.05);
 }
 
 .font-fab {

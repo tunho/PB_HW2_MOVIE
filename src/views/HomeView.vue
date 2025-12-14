@@ -47,7 +47,14 @@ const bannerMovie = ref<Movie | null>(null);
 const rows = ref<MovieRow[]>([]);
 const loading = ref(true);
 
-onMounted(async () => {
+  // Safety timeout: force loading to false after 5 seconds
+  const timeout = setTimeout(() => {
+    if (loading.value) {
+      console.warn('Data fetching timed out');
+      loading.value = false;
+    }
+  }, 5000);
+
   try {
     const [popular, nowPlaying, topRated, action, comedy] = await Promise.all([
       fetchPopularMovies(),
@@ -57,15 +64,19 @@ onMounted(async () => {
       fetchComedyMovies()
     ]);
 
+    clearTimeout(timeout);
+
     // Set random banner movie from popular
-    bannerMovie.value = popular.results[Math.floor(Math.random() * popular.results.length)];
+    if (popular.results && popular.results.length > 0) {
+      bannerMovie.value = popular.results[Math.floor(Math.random() * popular.results.length)];
+    }
 
     rows.value = [
-      { title: 'Popular on Netflix', movies: popular.results },
-      { title: 'Now Playing', movies: nowPlaying.results },
-      { title: 'Top Rated', movies: topRated.results },
-      { title: 'Action Thrillers', movies: action.results },
-      { title: 'Comedies', movies: comedy.results }
+      { title: 'Popular on Netflix', movies: popular.results || [] },
+      { title: 'Now Playing', movies: nowPlaying.results || [] },
+      { title: 'Top Rated', movies: topRated.results || [] },
+      { title: 'Action Thrillers', movies: action.results || [] },
+      { title: 'Comedies', movies: comedy.results || [] }
     ];
   } catch (error) {
     console.error('Failed to fetch movies:', error);
