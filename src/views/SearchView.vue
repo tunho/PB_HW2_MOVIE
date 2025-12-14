@@ -312,7 +312,7 @@ const filteredMovies = computed(() => {
 const resetFilters = () => {
   selectedGenre.value = '';
   minRating.value = '0';
-  sortBy.value = 'popularity.desc';
+  sortBy.value = 'popularity';
   // Watcher will trigger fetchMovies(1)
 };
 </script>
@@ -322,17 +322,23 @@ const resetFilters = () => {
   padding-top: 80px;
   min-height: 100vh;
   background-color: var(--background-color);
+  overflow-x: hidden; /* Prevent horizontal scroll */
 }
 
 .content {
   padding: 20px 4%;
+  /* Ensure content fits in viewport if possible */
+  max-height: calc(100vh - 80px);
+  display: flex;
+  flex-direction: column;
 }
 
 .search-bar {
   display: flex;
   gap: 10px;
-  margin-bottom: 30px;
+  margin-bottom: 15px; /* Reduced margin */
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .search-bar input {
@@ -354,9 +360,10 @@ const resetFilters = () => {
 .filters {
   display: flex;
   gap: 15px;
-  margin-bottom: 30px;
+  margin-bottom: 15px; /* Reduced margin */
   justify-content: center;
   flex-wrap: wrap;
+  flex-shrink: 0;
 }
 
 .filters select {
@@ -409,29 +416,31 @@ const resetFilters = () => {
 
 .search-history {
   text-align: center;
-  margin-bottom: 40px;
+  margin-bottom: 15px; /* Reduced margin */
+  flex-shrink: 0;
 }
 
 .search-history h3 {
   color: #777;
-  font-size: 1rem;
-  margin-bottom: 15px;
+  font-size: 0.9rem; /* Smaller font */
+  margin-bottom: 8px; /* Reduced margin */
 }
 
 .history-list {
   display: flex;
   justify-content: center;
-  gap: 10px;
+  gap: 8px; /* Reduced gap */
   flex-wrap: wrap;
-  margin-bottom: 15px;
+  margin-bottom: 8px; /* Reduced margin */
 }
 
 .history-item {
   background: rgba(255, 255, 255, 0.1);
-  padding: 8px 16px;
-  border-radius: 20px;
+  padding: 5px 12px; /* Reduced padding */
+  border-radius: 15px;
   cursor: pointer;
   transition: background 0.2s;
+  font-size: 0.9rem; /* Smaller font */
 }
 
 .history-item:hover {
