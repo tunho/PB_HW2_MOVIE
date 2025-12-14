@@ -1,23 +1,25 @@
 <template>
   <div class="home">
     <AppHeader />
-    <MainBanner :movie="bannerMovie" />
+    <LoadingSpinner v-if="loading" />
     
-    <div class="rows-container">
-      <div class="row" v-for="(row, index) in rows" :key="index">
-        <h2>{{ row.title }}</h2>
-        <div class="row-posters">
-          <MovieCard 
-            v-for="movie in row.movies" 
-            :key="movie.id" 
-            :movie="movie" 
-            class="row-poster"
-          />
+    <div v-else>
+      <MainBanner :movie="bannerMovie" />
+      
+      <div class="rows-container">
+        <div class="row" v-for="(row, index) in rows" :key="index">
+          <h2>{{ row.title }}</h2>
+          <div class="row-posters">
+            <MovieCard 
+              v-for="movie in row.movies" 
+              :key="movie.id" 
+              :movie="movie" 
+              class="row-poster"
+            />
+          </div>
         </div>
       </div>
     </div>
-    
-    <LoadingSpinner v-if="loading" />
   </div>
 </template>
 

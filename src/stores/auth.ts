@@ -6,10 +6,16 @@ export const useAuthStore = defineStore('auth', () => {
     const isAuthenticated = ref(false);
 
     const loadUser = () => {
-        const storedUser = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser');
-        if (storedUser) {
-            user.value = JSON.parse(storedUser);
-            isAuthenticated.value = true;
+        try {
+            const storedUser = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser');
+            if (storedUser) {
+                user.value = JSON.parse(storedUser);
+                isAuthenticated.value = true;
+            }
+        } catch (e) {
+            console.error('Failed to load user from storage:', e);
+            localStorage.removeItem('currentUser');
+            sessionStorage.removeItem('currentUser');
         }
     };
 
