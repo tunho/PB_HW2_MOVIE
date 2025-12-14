@@ -76,7 +76,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="movie in filteredMovies" :key="movie.id">
+                <tr v-for="movie in filteredMovies.slice(0, 8)" :key="movie.id">
                   <td>
                     <img :src="getImageUrl(movie.poster_path, 'w92')" alt="poster" class="table-poster" />
                   </td>
