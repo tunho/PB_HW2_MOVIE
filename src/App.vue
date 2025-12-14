@@ -1,7 +1,9 @@
 
 <template>
   <router-view v-slot="{ Component }">
-    <component :is="Component" />
+    <transition name="fade" mode="out-in">
+      <component :is="Component" />
+    </transition>
   </router-view>
   <MovieDetailModal />
   
@@ -39,19 +41,14 @@ onMounted(() => {
 </script>
 
 <style>
-.zoom-fade-enter-active,
-.zoom-fade-leave-active {
-  transition: all 0.3s ease;
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
 }
 
-.zoom-fade-enter-from {
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
-  transform: scale(0.95);
-}
-
-.zoom-fade-leave-to {
-  opacity: 0;
-  transform: scale(1.05);
 }
 
 .font-fab {
