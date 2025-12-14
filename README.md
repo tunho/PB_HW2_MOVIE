@@ -28,7 +28,7 @@
 1.  **저장소 복제 (Clone)**:
     ```bash
     git clone https://github.com/YOUR_USERNAME/WSD-Assignment-02.git
-    cd WSD-Assignment-02
+    cd PB_HW2_MOVIE
     ```
 
 2.  **의존성 설치**:
