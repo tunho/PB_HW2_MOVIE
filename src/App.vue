@@ -9,7 +9,7 @@
   <MovieDetailModal />
   
   <button class="font-fab" @click="cycleFontSize" title="Adjust Font Size">
-    <i class="fas fa-text-height"></i>
+    <i class="fas fa-font"></i>
   </button>
 </template>
 
@@ -66,7 +66,7 @@ onMounted(() => {
   justify-content: center;
   font-size: 1.2rem;
   cursor: pointer;
-  z-index: 2000;
+  z-index: 9999;
   box-shadow: 0 4px 10px rgba(0,0,0,0.5);
   transition: transform 0.2s, background-color 0.2s;
 }
