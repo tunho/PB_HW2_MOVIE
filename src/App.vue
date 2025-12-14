@@ -23,8 +23,6 @@ import MovieDetailModal from './components/MovieDetailModal.vue'
 import { ref, onMounted } from 'vue';
 
 const route = useRoute();
-import MovieDetailModal from './components/MovieDetailModal.vue'
-import { ref, onMounted } from 'vue';
 
 const fontSizes = ['16px', '18px', '20px'];
 const currentFontIndex = ref(0);
