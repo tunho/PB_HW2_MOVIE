@@ -125,6 +125,8 @@ const handleSearch = async (query?: string) => {
   } finally {
     loading.value = false;
   }
+  
+  await ensureEnoughMovies();
 };
 
 const loadDefaultMovies = async () => {
@@ -158,6 +160,8 @@ const loadDefaultMovies = async () => {
   } finally {
     loading.value = false;
   }
+  
+  await ensureEnoughMovies();
 };
 
 // Debounce function
@@ -232,14 +236,14 @@ const loadMore = async () => {
 
     if (data.results.length > 0) {
       movies.value = [...movies.value, ...data.results];
-    } else {
-      // If we got no results (filtered out), try loading the next page immediately
-      // to fill the screen, unless we reached the end
-      if (page.value < totalPages.value) {
-        loading.value = false; // Reset loading to allow recursive call
-        await loadMore();
-        return; // Exit current call
-      }
+    } 
+    
+    // If we got no results (filtered out), try loading the next page immediately
+    // to fill the screen, unless we reached the end
+    if (data.results.length === 0 && page.value < totalPages.value) {
+      loading.value = false; // Reset loading to allow recursive call
+      await loadMore();
+      return; // Exit current call
     }
   } catch (e) {
     console.error(e);
@@ -248,13 +252,23 @@ const loadMore = async () => {
   }
 };
 
+const ensureEnoughMovies = async () => {
+  // Try to load more until we have at least 20 items or run out of pages
+  // We limit the number of extra pages to avoid infinite loops if filter is too strict
+  let attempts = 0;
+  while (movies.value.length < 20 && page.value < totalPages.value && attempts < 5) {
+    await loadMore();
+    attempts++;
+  }
+};
+
 import { useIntersectionObserver } from '../composables/useIntersectionObserver';
 
 const { setupObserver } = useIntersectionObserver(sentinel, loadMore);
 
-onMounted(() => {
+onMounted(async () => {
   loadHistory();
-  loadDefaultMovies();
+  await loadDefaultMovies();
   // setupObserver is called in composable's onMounted, but we might need to ensure sentinel is rendered
 });
 
