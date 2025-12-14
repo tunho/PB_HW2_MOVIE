@@ -8,9 +8,6 @@
       <router-link to="/wishlist">My List</router-link>
     </nav>
     <div class="user-actions">
-      <button class="font-size-btn" @click="cycleFontSize" title="Adjust Font Size">
-        <i class="fas fa-font"></i>
-      </button>
       <div v-if="authStore.isAuthenticated" class="profile">
         <span>{{ authStore.user?.id }}</span>
         <button @click="handleLogout">Logout</button>
@@ -28,18 +25,9 @@ import { useRouter } from 'vue-router';
 const authStore = useAuthStore();
 const router = useRouter();
 const isScrolled = ref(false);
-const fontSizes = ['16px', '18px', '20px'];
-const currentFontIndex = ref(0);
 
 const handleScroll = () => {
   isScrolled.value = window.scrollY > 50;
-};
-
-const cycleFontSize = () => {
-  currentFontIndex.value = (currentFontIndex.value + 1) % fontSizes.length;
-  const newSize = fontSizes[currentFontIndex.value];
-  document.documentElement.style.fontSize = newSize;
-  localStorage.setItem('user_font_size', newSize);
 };
 
 const handleLogout = () => {
@@ -49,16 +37,6 @@ const handleLogout = () => {
 
 onMounted(() => {
   window.addEventListener('scroll', handleScroll);
-  
-  // Load saved font size
-  const savedSize = localStorage.getItem('user_font_size');
-  if (savedSize) {
-    const index = fontSizes.indexOf(savedSize);
-    if (index !== -1) {
-      currentFontIndex.value = index;
-      document.documentElement.style.fontSize = savedSize;
-    }
-  }
 });
 
 onUnmounted(() => {
@@ -120,27 +98,6 @@ nav a.router-link-active {
 .user-actions {
   display: flex;
   align-items: center;
-  gap: 15px;
-}
-
-.font-size-btn {
-  background: transparent;
-  border: 1px solid rgba(255,255,255,0.5);
-  color: white;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  padding: 0;
-}
-
-.font-size-btn:hover {
-  background: rgba(255,255,255,0.2);
-  border-color: white;
 }
 
 .profile {
