@@ -102,10 +102,13 @@
     </div>
     </div>
     <ToastNotification ref="toast" :message="toastMessage" :type="toastType" />
-  </div>
+
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
+import { useAuthStore } from '../stores/auth';
+import { useRouter } from 'vue-router';
 import ToastNotification from '../components/ToastNotification.vue';
 
 const authStore = useAuthStore();
