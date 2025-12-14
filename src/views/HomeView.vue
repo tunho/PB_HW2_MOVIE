@@ -47,6 +47,7 @@ const bannerMovie = ref<Movie | null>(null);
 const rows = ref<MovieRow[]>([]);
 const loading = ref(true);
 
+onMounted(async () => {
   // Safety timeout: force loading to false after 5 seconds
   const timeout = setTimeout(() => {
     if (loading.value) {
