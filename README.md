@@ -27,7 +27,7 @@
 
 1.  **저장소 복제 (Clone)**:
     ```bash
-    git clone https://github.com/YOUR_USERNAME/WSD-Assignment-02.git
+    git clone https://github.com/tunho/PB_HW2_MOVIE.git
     cd PB_HW2_MOVIE
     ```
 
