@@ -295,9 +295,24 @@ button:active {
   margin-bottom: 40px;
 }
 
+.remember-me {
+  display: flex;
+  align-items: center;
+}
+
+.remember-me input {
+  width: auto;
+  margin-right: 5px;
+}
+
 .text-gray {
   color: #737373;
-  margin-right: 5px;
+  margin-right: 8px;
+}
+
+.switch-mode {
+  display: flex;
+  align-items: center;
 }
 
 .switch-mode a {
