@@ -133,7 +133,7 @@ const searchHistory = ref<string[]>([]);
 
 const selectedGenre = ref('');
 const minRating = ref('0');
-const sortBy = ref('popularity.desc');
+const sortBy = ref('popularity');
 
 // Pagination State
 const page = ref(1);
