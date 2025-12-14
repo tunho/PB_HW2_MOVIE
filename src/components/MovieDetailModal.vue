@@ -19,6 +19,11 @@
             <span class="match">98% Match</span>
             <span class="year">{{ modalStore.selectedMovie.release_date?.split('-')[0] }}</span>
             <span class="rating">★ {{ modalStore.selectedMovie.vote_average?.toFixed(1) }}</span>
+            <span v-if="movieDetails?.runtime" class="runtime">{{ movieDetails.runtime }}m</span>
+            <span v-if="movieDetails?.genres" class="genres">
+              {{ movieDetails.genres.map((g: any) => g.name).slice(0, 3).join(', ') }}
+            </span>
+          </div>
           </div>
           
           <p class="overview">{{ modalStore.selectedMovie.overview }}</p>
@@ -34,18 +39,19 @@
           </div>
         </div>
       </div>
-    </div>
+
   </Transition>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useModalStore } from '../stores/modal';
 import { useWishlistStore } from '../stores/wishlist';
-import { getImageUrl } from '../services/tmdb';
+import { getImageUrl, fetchMovieDetail } from '../services/tmdb';
 
 const modalStore = useModalStore();
 const wishlistStore = useWishlistStore();
+const movieDetails = ref<any>(null);
 
 const isInWishlist = computed(() => {
   if (!modalStore.selectedMovie) return false;
@@ -57,6 +63,17 @@ const toggleWishlist = () => {
     wishlistStore.toggleWishlist(modalStore.selectedMovie);
   }
 };
+
+watch(() => modalStore.selectedMovie, async (newMovie) => {
+  if (newMovie) {
+    movieDetails.value = null; // Reset
+    try {
+      movieDetails.value = await fetchMovieDetail(newMovie.id);
+    } catch (e) {
+      console.error("Failed to fetch details", e);
+    }
+  }
+});
 </script>
 
 <style scoped>
@@ -156,9 +173,11 @@ const toggleWishlist = () => {
   font-size: 1.1rem;
 }
 
-.match {
-  color: #46d369;
-  font-weight: bold;
+
+
+.runtime, .genres {
+  color: #a3a3a3;
+  font-size: 0.9rem;
 }
 
 .overview {

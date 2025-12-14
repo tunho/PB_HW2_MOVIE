@@ -80,11 +80,19 @@ nav {
 nav a {
   font-size: 0.9rem;
   color: #e5e5e5;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+nav a:hover {
+  color: #b3b3b3;
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
 }
 
 nav a.router-link-active {
-  font-weight: bold;
   color: white;
+  font-weight: bold;
+  cursor: default;
 }
 
 .user-actions {
