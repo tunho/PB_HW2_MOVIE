@@ -1,7 +1,7 @@
 <template>
   <div class="home">
     <AppHeader />
-    <LoadingSpinner v-if="loading" />
+    <LoadingSpinner v-if="loading" overlay />
     
     <div v-else>
       <MainBanner :movie="bannerMovie" />
