@@ -5,14 +5,24 @@
   </router-view>
   <MovieDetailModal />
   
-  <button class="font-fab" @click="cycleFontSize" title="Adjust Font Size" style="display: flex !important; visibility: visible !important; opacity: 1 !important;">
+  <button 
+    v-if="route.path !== '/signin'"
+    class="font-fab" 
+    @click="cycleFontSize" 
+    title="Adjust Font Size" 
+    style="display: flex !important; visibility: visible !important; opacity: 1 !important;"
+  >
     <i class="fas fa-font"></i>
     <span style="margin-left: 5px; font-weight: bold; font-size: 0.9rem;">Text Size</span>
   </button>
 </template>
 
 <script setup lang="ts">
-import { RouterView } from 'vue-router'
+import { RouterView, useRoute } from 'vue-router'
+import MovieDetailModal from './components/MovieDetailModal.vue'
+import { ref, onMounted } from 'vue';
+
+const route = useRoute();
 import MovieDetailModal from './components/MovieDetailModal.vue'
 import { ref, onMounted } from 'vue';
 
