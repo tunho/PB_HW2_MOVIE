@@ -100,13 +100,16 @@
         </div>
       </div>
     </div>
-  </div>
+    </div>
+    <ToastNotification ref="toast" :message="toastMessage" :type="toastType" />
+
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { useRouter } from 'vue-router';
+import ToastNotification from '../components/ToastNotification.vue';
 
 const authStore = useAuthStore();
 const router = useRouter();
@@ -119,6 +122,16 @@ const rememberMe = ref(true);
 const termsAgreed = ref(false);
 const error = ref('');
 const loading = ref(false);
+
+const toast = ref();
+const toastMessage = ref('');
+const toastType = ref<'success' | 'error'>('success');
+
+const showToast = (msg: string, type: 'success' | 'error') => {
+  toastMessage.value = msg;
+  toastType.value = type;
+  toast.value?.show();
+};
 
 const toggleMode = () => {
   isLogin.value = !isLogin.value;
@@ -139,49 +152,55 @@ const handleSubmit = async () => {
   // Basic validation
   if (!email.value.includes('@')) {
     error.value = 'Please enter a valid email address.';
+    showToast('Please enter a valid email address.', 'error');
     loading.value = false;
     return;
   }
 
   if (password.value.length < 4) {
     error.value = 'Password must be at least 4 characters.';
+    showToast('Password must be at least 4 characters.', 'error');
     loading.value = false;
     return;
   }
 
   try {
     if (isLogin.value) {
-      const success = authStore.login(email.value, password.value);
+      const success = authStore.login(email.value, password.value, rememberMe.value);
       if (success) {
-        router.push('/');
+        showToast('Welcome back!', 'success');
+        setTimeout(() => router.push('/'), 1000);
       } else {
         error.value = 'Invalid email or password.';
+        showToast('Invalid email or password.', 'error');
       }
     } else {
       if (password.value !== confirmPassword.value) {
         error.value = 'Passwords do not match.';
+        showToast('Passwords do not match.', 'error');
         loading.value = false;
         return;
       }
       
       if (!termsAgreed.value) {
         error.value = 'You must agree to the terms and conditions.';
+        showToast('You must agree to the terms and conditions.', 'error');
         loading.value = false;
         return;
       }
 
       const success = authStore.register(email.value, password.value);
       if (success) {
-        // Auto login after register or switch to login? Assignment says:
-        // "Sign up success -> move to signin page and auto show login window"
         isLogin.value = true;
-        alert('Registration successful! Please sign in.');
+        showToast('Registration successful! Please sign in.', 'success');
       } else {
         error.value = 'User already exists.';
+        showToast('User already exists.', 'error');
       }
     }
   } catch (e) {
     error.value = 'An error occurred.';
+    showToast('An error occurred.', 'error');
   } finally {
     loading.value = false;
   }
@@ -238,7 +257,7 @@ const handleSubmit = async () => {
 
 .form-content {
   background: rgba(0, 0, 0, 0.75);
-  padding: 60px 68px 40px;
+  padding: 60px 40px 40px;
   border-radius: 4px;
   width: 100%;
   max-width: 450px;
@@ -295,12 +314,34 @@ button:active {
   margin-bottom: 40px;
 }
 
-.text-gray {
-  color: #737373;
+.remember-me {
+  display: flex;
+  align-items: center;
+}
+
+.remember-me input {
+  width: auto;
   margin-right: 5px;
 }
 
+.remember-me label {
+  white-space: nowrap;
+}
+
+.text-gray {
+  color: #737373;
+  margin-right: 8px;
+  white-space: nowrap;
+}
+
+.switch-mode {
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
 .switch-mode a {
+  white-space: nowrap;
   color: white;
 }
 

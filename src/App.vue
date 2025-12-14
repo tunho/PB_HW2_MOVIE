@@ -8,8 +8,9 @@
   </router-view>
   <MovieDetailModal />
   
-  <button class="font-fab" @click="cycleFontSize" title="Adjust Font Size">
-    <i class="fas fa-text-height"></i>
+  <button class="font-fab" @click="cycleFontSize" title="Adjust Font Size" style="display: flex !important; visibility: visible !important; opacity: 1 !important;">
+    <i class="fas fa-font"></i>
+    <span style="margin-left: 5px; font-weight: bold; font-size: 0.9rem;">Text Size</span>
   </button>
 </template>
 
@@ -55,18 +56,19 @@ onMounted(() => {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background-color: #333;
+  width: auto;
+  padding: 0 12px;
+  height: 40px;
+  border-radius: 20px;
+  background-color: var(--primary-color) !important;
   border: 2px solid white;
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
+  font-size: 1rem;
   cursor: pointer;
-  z-index: 2000;
+  z-index: 9999;
   box-shadow: 0 4px 10px rgba(0,0,0,0.5);
   transition: transform 0.2s, background-color 0.2s;
 }

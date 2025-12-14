@@ -150,6 +150,11 @@ const debounce = (fn: Function, delay: number) => {
 watch(searchQuery, debounce((newQuery: string) => {
   if (newQuery.trim()) {
     handleSearch(newQuery);
+  } else {
+    // Reset to initial state if query is empty
+    hasSearched.value = false;
+    movies.value = [];
+    loading.value = false;
   }
 }, 500));
 
