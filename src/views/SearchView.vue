@@ -61,12 +61,15 @@
         <div v-else-if="filteredMovies.length === 0 && hasSearched && searchQuery" class="no-results">
           No movies found matching your criteria.
         </div>
-        <div v-else class="movies-grid">
+        <div class="movies-grid">
           <MovieCard 
             v-for="movie in filteredMovies" 
             :key="movie.id" 
             :movie="movie" 
           />
+        </div>
+        <div ref="sentinel" class="sentinel">
+          <LoadingSpinner v-if="loading" />
         </div>
       </div>
     </div>
@@ -99,8 +102,34 @@ const loadHistory = () => {
   }
 };
 
+const handleSearch = async (query?: string) => {
+  const term = query || searchQuery.value;
+  if (!term.trim()) return;
+  
+  // Update input if searched via history click
+  if (query) searchQuery.value = query;
+
+  saveHistory(term);
+  
+  loading.value = true;
+  hasSearched.value = true;
+  movies.value = []; // Clear previous results
+  page.value = 1; // Reset page
+  
+  try {
+    const data = await searchMovies(term);
+    movies.value = data.results;
+    totalPages.value = data.total_pages;
+  } catch (e) {
+    console.error(e);
+  } finally {
+    loading.value = false;
+  }
+};
+
 const loadDefaultMovies = async () => {
   loading.value = true;
+  page.value = 1; // Reset page
   try {
     // Map sort values to API format
     let apiSort = 'popularity.desc';
@@ -123,47 +152,7 @@ const loadDefaultMovies = async () => {
 
     const data = await discoverMovies(params);
     movies.value = data.results;
-  } catch (e) {
-    console.error(e);
-  } finally {
-    loading.value = false;
-  }
-};
-
-const saveHistory = (query: string) => {
-  let history = [...searchHistory.value];
-  // Remove if exists to move to top
-  history = history.filter(item => item !== query);
-  // Add to front
-  history.unshift(query);
-  // Limit to 5
-  if (history.length > 5) history.pop();
-  
-  searchHistory.value = history;
-  localStorage.setItem('search_history', JSON.stringify(history));
-};
-
-const clearHistory = () => {
-  searchHistory.value = [];
-  localStorage.removeItem('search_history');
-};
-
-const handleSearch = async (query?: string) => {
-  const term = query || searchQuery.value;
-  if (!term.trim()) return;
-  
-  // Update input if searched via history click
-  if (query) searchQuery.value = query;
-
-  saveHistory(term);
-  
-  loading.value = true;
-  hasSearched.value = true;
-  movies.value = []; // Clear previous results
-  
-  try {
-    const data = await searchMovies(term);
-    movies.value = data.results;
+    totalPages.value = data.total_pages;
   } catch (e) {
     console.error(e);
   } finally {
@@ -198,9 +187,65 @@ watch([selectedGenre, minRating, sortBy], () => {
   }
 });
 
+// Infinite Scroll Logic
+const sentinel = ref<HTMLElement | null>(null);
+const page = ref(1);
+const totalPages = ref(1);
+
+const loadMore = async () => {
+  if (loading.value || page.value >= totalPages.value) return;
+  
+  loading.value = true;
+  const nextPage = page.value + 1;
+  
+  try {
+    let data;
+    if (searchQuery.value.trim()) {
+      // Search Mode
+      data = await searchMovies(searchQuery.value, nextPage);
+    } else {
+      // Browse Mode
+      // Map sort values to API format
+      let apiSort = 'popularity.desc';
+      if (sortBy.value === 'vote_average') apiSort = 'vote_average.desc';
+      if (sortBy.value === 'release_date') apiSort = 'primary_release_date.desc';
+      if (sortBy.value === 'popularity') apiSort = 'popularity.desc';
+
+      const params: any = {
+        sort_by: apiSort,
+        page: nextPage
+      };
+
+      if (selectedGenre.value) {
+        params.with_genres = selectedGenre.value;
+      }
+
+      if (minRating.value !== '0') {
+        params['vote_average.gte'] = minRating.value;
+      }
+      
+      data = await discoverMovies(params);
+    }
+
+    if (data.results.length > 0) {
+      movies.value = [...movies.value, ...data.results];
+      page.value = nextPage;
+    }
+  } catch (e) {
+    console.error(e);
+  } finally {
+    loading.value = false;
+  }
+};
+
+import { useIntersectionObserver } from '../composables/useIntersectionObserver';
+
+const { setupObserver } = useIntersectionObserver(sentinel, loadMore);
+
 onMounted(() => {
   loadHistory();
   loadDefaultMovies();
+  // setupObserver is called in composable's onMounted, but we might need to ensure sentinel is rendered
 });
 
 const filteredMovies = computed(() => {
@@ -211,6 +256,13 @@ const filteredMovies = computed(() => {
   }
 
   // If we are in "Search Mode", we do client-side filtering on the search results.
+  // Note: For infinite scroll to work properly with client-side filtering, 
+  // we should ideally filter on the server. 
+  // But for now, we'll keep the hybrid approach: Server fetches pages, Client filters them.
+  // This might result in fewer items than expected if many are filtered out.
+  // However, the user asked for "related movies" when filtering without search, which we solved with server-side discover.
+  // When searching, we are still using client-side filtering for the specific results.
+  
   let result = [...movies.value];
 
   // Filter by Genre (TMDB returns genre_ids)
@@ -379,5 +431,12 @@ const resetFilters = () => {
 .clear-history:hover {
   color: #999;
   background: transparent;
+}
+
+.sentinel {
+  height: 50px;
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
 }
 </style>
