@@ -6,21 +6,9 @@ const BASE_URL = 'https://api.themoviedb.org/3';
 const tmdb = axios.create({
     baseURL: BASE_URL,
     params: {
+        api_key: TMDB_API_KEY,
         language: 'ko-KR',
     },
-});
-
-// Add a request interceptor to inject the API key dynamically
-tmdb.interceptors.request.use((config) => {
-    const storedKey = localStorage.getItem('TMDb-Key') || sessionStorage.getItem('TMDb-Key');
-    const apiKey = storedKey || TMDB_API_KEY;
-
-    if (apiKey) {
-        config.params = { ...config.params, api_key: apiKey };
-    }
-    return config;
-}, (error) => {
-    return Promise.reject(error);
 });
 
 export const fetchPopularMovies = async (page = 1) => {
@@ -55,6 +43,18 @@ export const fetchComedyMovies = async (page = 1) => {
 
 export const searchMovies = async (query: string, page = 1) => {
     const response = await tmdb.get('/search/movie', { params: { query, page } });
+    response.data.results = response.data.results.filter((m: any) => m.poster_path);
+    return response.data;
+};
+
+export const discoverMovies = async (params: {
+    with_genres?: string;
+    'vote_average.gte'?: string;
+    sort_by?: string;
+    page?: number;
+    'primary_release_date.lte'?: string;
+}) => {
+    const response = await tmdb.get('/discover/movie', { params });
     response.data.results = response.data.results.filter((m: any) => m.poster_path);
     return response.data;
 };

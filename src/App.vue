@@ -1,10 +1,7 @@
 
 <template>
   <router-view v-slot="{ Component }">
-    <!-- Global Page Transition -->
-    <transition name="fade" mode="out-in">
-      <component :is="Component" />
-    </transition>
+    <component :is="Component" />
   </router-view>
   <MovieDetailModal />
   
@@ -42,15 +39,6 @@ onMounted(() => {
 </script>
 
 <style>
-.page-enter-active,
-.page-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.page-enter-from,
-.page-leave-to {
-  opacity: 0;
-}
 
 .font-fab {
   position: fixed;

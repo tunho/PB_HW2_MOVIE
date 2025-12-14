@@ -38,7 +38,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="movie in movies" :key="movie.id">
+            <tr v-for="movie in movies.slice(0, 12)" :key="movie.id">
               <td>
                 <img :src="getImageUrl(movie.poster_path, 'w92')" alt="poster" class="table-poster" />
               </td>
@@ -60,7 +60,7 @@
         />
       </div>
 
-      <button v-show="showScrollTop" @click="scrollToTop" class="scroll-top">
+      <button v-show="showScrollTop && viewMode === 'grid'" @click="scrollToTop" class="scroll-top">
         <i class="fas fa-arrow-up"></i>
       </button>
     </div>
@@ -73,7 +73,7 @@ import AppHeader from '../components/AppHeader.vue';
 import MovieCard from '../components/MovieCard.vue';
 import LoadingSpinner from '../components/LoadingSpinner.vue';
 import PaginationControl from '../components/PaginationControl.vue';
-import { fetchPopularMovies, getImageUrl } from '../services/tmdb';
+import { fetchPopularMovies, getImageUrl, discoverMovies } from '../services/tmdb';
 import { useWishlistStore, type Movie } from '../stores/wishlist';
 
 import { useIntersectionObserver } from '../composables/useIntersectionObserver';
@@ -90,7 +90,14 @@ const loadMovies = async (reset = false) => {
   if (loading.value) return;
   loading.value = true;
   try {
-    const data = await fetchPopularMovies(page.value);
+    // Use discoverMovies to filter out unreleased movies
+    const today = new Date().toISOString().split('T')[0];
+    const data = await discoverMovies({
+      page: page.value,
+      sort_by: 'popularity.desc',
+      'primary_release_date.lte': today
+    });
+    
     if (reset) {
       movies.value = data.results;
     } else {
@@ -159,11 +166,6 @@ watch(viewMode, (newMode) => {
 
 onMounted(() => {
   loadInitialMovies();
-  // setupObserver is called automatically by composable onMounted, 
-  // but we might need to re-call it if sentinel wasn't ready? 
-  // The composable handles onMounted. 
-  // However, loadInitialMovies is async, so sentinel might be pushed down.
-  // The composable watches target? No, it takes a Ref.
   window.addEventListener('scroll', handleScroll);
 });
 
@@ -177,6 +179,8 @@ onUnmounted(() => {
   padding-top: 80px;
   min-height: 100vh;
   background-color: var(--background-color);
+  /* Ensure no scroll on table view if content fits */
+  overflow-x: hidden; 
 }
 
 .content {
@@ -196,6 +200,10 @@ h1 {
 .view-controls button {
   background: transparent;
   border: 1px solid white;
+  color: white;
+  padding: 5px 15px;
+  border-radius: 4px;
+  cursor: pointer;
 }
 
 .view-controls button.active {
@@ -221,25 +229,47 @@ h1 {
   margin-top: 20px;
 }
 
+.table-view {
+  /* Compact table view */
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
 .table-view table {
   width: 100%;
   border-collapse: collapse;
   color: white;
+  margin-bottom: 20px;
 }
 
 .table-view th, .table-view td {
-  padding: 10px;
+  padding: 8px 10px; /* Reduced padding */
   text-align: left;
   border-bottom: 1px solid #333;
+  vertical-align: middle;
 }
 
 .table-poster {
-  width: 50px;
+  width: 40px; /* Smaller poster */
   border-radius: 4px;
+  display: block;
+}
+
+.wishlist-btn {
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 1.2rem;
+}
+
+.wishlist-btn:hover {
+  color: var(--primary-color);
 }
 
 .pagination {
-  margin-top: 20px;
+  margin-top: 10px;
   display: flex;
   justify-content: center;
   gap: 20px;
@@ -257,5 +287,9 @@ h1 {
   align-items: center;
   justify-content: center;
   z-index: 100;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  cursor: pointer;
 }
 </style>

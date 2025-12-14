@@ -6,10 +6,16 @@ export const useAuthStore = defineStore('auth', () => {
     const isAuthenticated = ref(false);
 
     const loadUser = () => {
-        const storedUser = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser');
-        if (storedUser) {
-            user.value = JSON.parse(storedUser);
-            isAuthenticated.value = true;
+        try {
+            const storedUser = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser');
+            if (storedUser) {
+                user.value = JSON.parse(storedUser);
+                isAuthenticated.value = true;
+            }
+        } catch (e) {
+            console.error('Failed to load user from storage:', e);
+            localStorage.removeItem('currentUser');
+            sessionStorage.removeItem('currentUser');
         }
     };
 
@@ -23,10 +29,8 @@ export const useAuthStore = defineStore('auth', () => {
 
             if (remember) {
                 localStorage.setItem('currentUser', JSON.stringify(user.value));
-                localStorage.setItem('TMDb-Key', password);
             } else {
                 sessionStorage.setItem('currentUser', JSON.stringify(user.value));
-                sessionStorage.setItem('TMDb-Key', password);
             }
             return true;
         }
@@ -47,9 +51,7 @@ export const useAuthStore = defineStore('auth', () => {
         user.value = null;
         isAuthenticated.value = false;
         localStorage.removeItem('currentUser');
-        localStorage.removeItem('TMDb-Key');
         sessionStorage.removeItem('currentUser');
-        sessionStorage.removeItem('TMDb-Key');
     };
 
     // Initialize
