@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const TMDB_API_KEY = 'eb89fc38dfc6118d58aecf5d55e658ad'; // Replace with actual key or env var
+const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 const BASE_URL = 'https://api.themoviedb.org/3';
 
 const tmdb = axios.create({
@@ -44,6 +44,11 @@ export const fetchComedyMovies = async (page = 1) => {
 export const searchMovies = async (query: string, page = 1) => {
     const response = await tmdb.get('/search/movie', { params: { query, page } });
     response.data.results = response.data.results.filter((m: any) => m.poster_path);
+    return response.data;
+};
+
+export const fetchMovieDetail = async (id: number) => {
+    const response = await tmdb.get(`/movie/${id}`);
     return response.data;
 };
 

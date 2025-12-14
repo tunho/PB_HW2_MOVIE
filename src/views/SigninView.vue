@@ -9,8 +9,8 @@
       <div class="form-content">
         <h2>{{ isLogin ? 'Sign In' : 'Sign Up' }}</h2>
         
-        <Transition name="fade" mode="out-in">
-          <form v-if="isLogin" @submit.prevent="handleSubmit" key="login">
+          <Transition name="flip" mode="out-in">
+            <form v-if="isLogin" @submit.prevent="handleSubmit" key="login" class="auth-form">
             <div class="input-group">
               <input 
                 v-model="email" 
@@ -43,7 +43,7 @@
             </div>
           </form>
 
-          <form v-else @submit.prevent="handleSubmit" key="signup">
+          <form v-else @submit.prevent="handleSubmit" key="signup" class="auth-form">
             <div class="input-group">
               <input 
                 v-model="email" 
@@ -243,6 +243,7 @@ const handleSubmit = async () => {
   width: 100%;
   max-width: 450px;
   min-height: 500px;
+  perspective: 1000px;
 }
 
 h2 {
@@ -314,14 +315,19 @@ button:active {
 }
 
 /* Transition Effects */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease, transform 0.3s ease;
+/* Transition Effects */
+.flip-enter-active,
+.flip-leave-active {
+  transition: all 0.4s ease;
 }
 
-.fade-enter-from,
-.fade-leave-to {
+.flip-enter-from {
+  transform: rotateY(-90deg);
   opacity: 0;
-  transform: translateY(10px);
+}
+
+.flip-leave-to {
+  transform: rotateY(90deg);
+  opacity: 0;
 }
 </style>
