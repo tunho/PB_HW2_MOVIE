@@ -78,7 +78,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 import AppHeader from '../components/AppHeader.vue';
 import MovieCard from '../components/MovieCard.vue';
 import LoadingSpinner from '../components/LoadingSpinner.vue';
-import { searchMovies, fetchPopularMovies } from '../services/tmdb';
+import { searchMovies, fetchPopularMovies, discoverMovies } from '../services/tmdb';
 import type { Movie } from '../stores/wishlist';
 
 const searchQuery = ref('');
@@ -89,7 +89,7 @@ const searchHistory = ref<string[]>([]);
 
 const selectedGenre = ref('');
 const minRating = ref('0');
-const sortBy = ref('popularity');
+const sortBy = ref('popularity.desc'); // Default sort for API
 
 // Load history on mount
 const loadHistory = () => {
@@ -102,7 +102,26 @@ const loadHistory = () => {
 const loadDefaultMovies = async () => {
   loading.value = true;
   try {
-    const data = await fetchPopularMovies();
+    // Map sort values to API format
+    let apiSort = 'popularity.desc';
+    if (sortBy.value === 'vote_average') apiSort = 'vote_average.desc';
+    if (sortBy.value === 'release_date') apiSort = 'primary_release_date.desc';
+    if (sortBy.value === 'popularity') apiSort = 'popularity.desc';
+
+    const params: any = {
+      sort_by: apiSort,
+      page: 1
+    };
+
+    if (selectedGenre.value) {
+      params.with_genres = selectedGenre.value;
+    }
+
+    if (minRating.value !== '0') {
+      params['vote_average.gte'] = minRating.value;
+    }
+
+    const data = await discoverMovies(params);
     movies.value = data.results;
   } catch (e) {
     console.error(e);
@@ -168,10 +187,16 @@ watch(searchQuery, debounce((newQuery: string) => {
   } else {
     // Reset to initial state if query is empty
     hasSearched.value = false;
-    movies.value = [];
-    loading.value = false;
+    loadDefaultMovies(); // Reload default/filtered view
   }
 }, 500));
+
+// Watch filters to trigger server-side filtering when no search query
+watch([selectedGenre, minRating, sortBy], () => {
+  if (!searchQuery.value.trim()) {
+    loadDefaultMovies();
+  }
+});
 
 onMounted(() => {
   loadHistory();
@@ -179,14 +204,18 @@ onMounted(() => {
 });
 
 const filteredMovies = computed(() => {
+  // If we are in "Browse Mode" (no search query), movies.value is already filtered by the API.
+  // So we just return it.
+  if (!searchQuery.value.trim()) {
+    return movies.value;
+  }
+
+  // If we are in "Search Mode", we do client-side filtering on the search results.
   let result = [...movies.value];
 
   // Filter by Genre (TMDB returns genre_ids)
   if (selectedGenre.value) {
     const genreId = parseInt(selectedGenre.value);
-    // Note: Movie interface needs genre_ids to filter properly. 
-    // Let's assume we might not have it in the interface yet, but the object has it.
-    // We'll cast to any or update interface. Updating interface is better but for now casting.
     result = result.filter((m: any) => m.genre_ids && m.genre_ids.includes(genreId));
   }
 
@@ -214,6 +243,7 @@ const resetFilters = () => {
   selectedGenre.value = '';
   minRating.value = '0';
   sortBy.value = 'popularity';
+  // Watcher will trigger loadDefaultMovies if no search query
 };
 </script>
 
