@@ -1,10 +1,7 @@
 
 <template>
   <router-view v-slot="{ Component }">
-    <!-- Global Page Transition -->
-    <transition name="zoom-fade" mode="out-in">
-      <component :is="Component" />
-    </transition>
+    <component :is="Component" />
   </router-view>
   <MovieDetailModal />
   
