@@ -18,6 +18,10 @@
     </div>
     
     <LoadingSpinner v-if="loading" />
+    <div v-if="error" class="error-display">
+      <p>{{ error }}</p>
+      <button @click="retryFetch">Retry</button>
+    </div>
   </div>
 </template>
 
@@ -44,8 +48,11 @@ interface MovieRow {
 const bannerMovie = ref<Movie | null>(null);
 const rows = ref<MovieRow[]>([]);
 const loading = ref(true);
+const error = ref('');
 
-onMounted(async () => {
+const fetchData = async () => {
+  loading.value = true;
+  error.value = '';
   try {
     const [popular, nowPlaying, topRated, action, comedy] = await Promise.all([
       fetchPopularMovies(),
@@ -56,7 +63,9 @@ onMounted(async () => {
     ]);
 
     // Set random banner movie from popular
-    bannerMovie.value = popular.results[Math.floor(Math.random() * popular.results.length)];
+    if (popular.results.length > 0) {
+      bannerMovie.value = popular.results[Math.floor(Math.random() * popular.results.length)];
+    }
 
     rows.value = [
       { title: 'Popular on Netflix', movies: popular.results },
@@ -65,11 +74,23 @@ onMounted(async () => {
       { title: 'Action Thrillers', movies: action.results },
       { title: 'Comedies', movies: comedy.results }
     ];
-  } catch (error) {
-    console.error('Failed to fetch movies:', error);
+  } catch (e: any) {
+    console.error('Failed to fetch movies:', e);
+    error.value = 'Failed to load movies. Please check your API Key (Password) or network connection.';
+    if (e.response && e.response.status === 401) {
+       error.value = 'Invalid API Key. Please log out and try again with a valid TMDB API Key.';
+    }
   } finally {
     loading.value = false;
   }
+};
+
+const retryFetch = () => {
+  fetchData();
+};
+
+onMounted(() => {
+  fetchData();
 });
 </script>
 
@@ -127,5 +148,25 @@ onMounted(async () => {
   .rows-container {
     margin-top: -50px;
   }
+}
+
+.error-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 50vh;
+  color: white;
+  text-align: center;
+}
+
+.error-display button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
 }
 </style>

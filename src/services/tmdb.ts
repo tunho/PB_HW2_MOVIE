@@ -15,6 +15,8 @@ tmdb.interceptors.request.use((config) => {
     const storedKey = localStorage.getItem('TMDb-Key') || sessionStorage.getItem('TMDb-Key');
     const apiKey = storedKey || TMDB_API_KEY;
 
+    // console.log('API Key used:', apiKey ? 'Present' : 'Missing', 'Stored:', storedKey, 'Env:', TMDB_API_KEY);
+
     if (apiKey) {
         config.params = { ...config.params, api_key: apiKey };
     }
