@@ -227,9 +227,19 @@ const loadMore = async () => {
       data = await discoverMovies(params);
     }
 
+    // Always increment page on success to avoid getting stuck on empty filtered pages
+    page.value = nextPage;
+
     if (data.results.length > 0) {
       movies.value = [...movies.value, ...data.results];
-      page.value = nextPage;
+    } else {
+      // If we got no results (filtered out), try loading the next page immediately
+      // to fill the screen, unless we reached the end
+      if (page.value < totalPages.value) {
+        loading.value = false; // Reset loading to allow recursive call
+        await loadMore();
+        return; // Exit current call
+      }
     }
   } catch (e) {
     console.error(e);
