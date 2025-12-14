@@ -169,7 +169,7 @@ const handleSubmit = async () => {
       const success = authStore.login(email.value, password.value, rememberMe.value);
       if (success) {
         showToast('Welcome back!', 'success');
-        setTimeout(() => router.push('/'), 1000);
+        router.push('/');
       } else {
         error.value = 'Invalid email or password.';
         showToast('Invalid email or password.', 'error');

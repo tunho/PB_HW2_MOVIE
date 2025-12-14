@@ -9,8 +9,13 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100px;
+  height: 100vh; /* Full viewport height */
   width: 100%;
+  position: fixed; /* Overlay everything */
+  top: 0;
+  left: 0;
+  z-index: 2000; /* Below FAB but above content */
+  background-color: var(--background-color); /* Ensure background is opaque */
 }
 
 .spinner {
