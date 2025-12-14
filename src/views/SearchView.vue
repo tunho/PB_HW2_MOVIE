@@ -168,10 +168,13 @@ const fetchMovies = async (pageNum: number) => {
   
   try {
     let data;
+    const today = new Date().toISOString().split('T')[0];
     
     if (searchQuery.value.trim()) {
       // Search Mode
       data = await searchMovies(searchQuery.value, pageNum);
+      // Client-side filter for search results (API doesn't support strict date filter on search endpoint)
+      data.results = data.results.filter((m: any) => !m.release_date || m.release_date <= today);
     } else {
       // Browse Mode
       let apiSort = 'popularity.desc';
@@ -181,7 +184,8 @@ const fetchMovies = async (pageNum: number) => {
 
       const params: any = {
         sort_by: apiSort,
-        page: pageNum
+        page: pageNum,
+        'primary_release_date.lte': today
       };
 
       if (selectedGenre.value) {

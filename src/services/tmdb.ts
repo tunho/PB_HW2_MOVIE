@@ -47,7 +47,13 @@ export const searchMovies = async (query: string, page = 1) => {
     return response.data;
 };
 
-export const discoverMovies = async (params: { with_genres?: string; 'vote_average.gte'?: string; sort_by?: string; page?: number }) => {
+export const discoverMovies = async (params: {
+    with_genres?: string;
+    'vote_average.gte'?: string;
+    sort_by?: string;
+    page?: number;
+    'primary_release_date.lte'?: string;
+}) => {
     const response = await tmdb.get('/discover/movie', { params });
     response.data.results = response.data.results.filter((m: any) => m.poster_path);
     return response.data;

@@ -73,7 +73,7 @@ import AppHeader from '../components/AppHeader.vue';
 import MovieCard from '../components/MovieCard.vue';
 import LoadingSpinner from '../components/LoadingSpinner.vue';
 import PaginationControl from '../components/PaginationControl.vue';
-import { fetchPopularMovies, getImageUrl } from '../services/tmdb';
+import { fetchPopularMovies, getImageUrl, discoverMovies } from '../services/tmdb';
 import { useWishlistStore, type Movie } from '../stores/wishlist';
 
 import { useIntersectionObserver } from '../composables/useIntersectionObserver';
@@ -90,7 +90,14 @@ const loadMovies = async (reset = false) => {
   if (loading.value) return;
   loading.value = true;
   try {
-    const data = await fetchPopularMovies(page.value);
+    // Use discoverMovies to filter out unreleased movies
+    const today = new Date().toISOString().split('T')[0];
+    const data = await discoverMovies({
+      page: page.value,
+      sort_by: 'popularity.desc',
+      'primary_release_date.lte': today
+    });
+    
     if (reset) {
       movies.value = data.results;
     } else {
