@@ -10,7 +10,7 @@
   
   <button class="font-fab" @click="cycleFontSize" title="Adjust Font Size" style="display: flex !important; visibility: visible !important; opacity: 1 !important;">
     <i class="fas fa-font"></i>
-    <span style="margin-left: 5px; font-weight: bold;">SIZE</span>
+    <span style="margin-left: 5px; font-weight: bold; font-size: 0.9rem;">Text Size</span>
   </button>
 </template>
 
@@ -57,16 +57,16 @@ onMounted(() => {
   bottom: 20px;
   right: 20px;
   width: auto;
-  padding: 0 15px;
-  height: 50px;
-  border-radius: 25px;
+  padding: 0 12px;
+  height: 40px;
+  border-radius: 20px;
   background-color: var(--primary-color) !important;
   border: 2px solid white;
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
+  font-size: 1rem;
   cursor: pointer;
   z-index: 9999;
   box-shadow: 0 4px 10px rgba(0,0,0,0.5);
