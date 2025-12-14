@@ -44,7 +44,7 @@ onMounted(() => {
 <style>
 .zoom-fade-enter-active,
 .zoom-fade-leave-active {
-  transition: all 0.5s ease;
+  transition: all 0.3s ease;
 }
 
 .zoom-fade-enter-from {
