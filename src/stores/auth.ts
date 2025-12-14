@@ -6,23 +6,26 @@ export const useAuthStore = defineStore('auth', () => {
     const isAuthenticated = ref(false);
 
     const loadUser = () => {
-        const storedUser = localStorage.getItem('currentUser');
+        const storedUser = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser');
         if (storedUser) {
             user.value = JSON.parse(storedUser);
             isAuthenticated.value = true;
         }
     };
 
-    const login = (email: string, password: string): boolean => {
+    const login = (email: string, password: string, remember: boolean = true): boolean => {
         const users = JSON.parse(localStorage.getItem('users') || '[]');
         const foundUser = users.find((u: any) => u.id === email && u.password === password);
 
         if (foundUser) {
             user.value = { id: email };
             isAuthenticated.value = true;
-            localStorage.setItem('currentUser', JSON.stringify(user.value));
-            // Also store API key if needed, as per assignment hint (password as key?)
-            // localStorage.setItem('TMDb-Key', password); 
+
+            if (remember) {
+                localStorage.setItem('currentUser', JSON.stringify(user.value));
+            } else {
+                sessionStorage.setItem('currentUser', JSON.stringify(user.value));
+            }
             return true;
         }
         return false;
@@ -42,7 +45,7 @@ export const useAuthStore = defineStore('auth', () => {
         user.value = null;
         isAuthenticated.value = false;
         localStorage.removeItem('currentUser');
-        // router.push('/signin'); // Can't use router here easily without setup, handle in component
+        sessionStorage.removeItem('currentUser');
     };
 
     // Initialize
