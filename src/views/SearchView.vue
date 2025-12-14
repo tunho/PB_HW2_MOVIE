@@ -44,11 +44,14 @@
           <option value="8">8+ Stars</option>
         </select>
 
-        <select v-model="sortBy">
-          <option value="popularity">Popularity</option>
-          <option value="vote_average">Rating</option>
-          <option value="release_date">Release Date</option>
-        </select>
+        <div class="sort-group">
+          <span class="sort-label"><i class="fas fa-sort"></i> Sort by:</span>
+          <select v-model="sortBy" class="sort-select">
+            <option value="popularity">Popularity</option>
+            <option value="vote_average">Rating</option>
+            <option value="release_date">Release Date</option>
+          </select>
+        </div>
         
         <button @click="resetFilters" class="reset-btn">Reset Filters</button>
       </div>
@@ -267,6 +270,26 @@ const resetFilters = () => {
 .reset-btn {
   background: transparent;
   border: 1px solid #555;
+}
+
+.sort-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 10px; /* Separate from filters */
+  padding-left: 10px;
+  border-left: 1px solid #555;
+}
+
+.sort-label {
+  color: #aaa;
+  font-size: 0.9rem;
+}
+
+.sort-select {
+  border-color: var(--primary-color) !important;
+  color: var(--primary-color) !important;
+  font-weight: bold;
 }
 
 .movies-grid {
